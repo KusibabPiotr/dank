@@ -2,6 +2,13 @@ package com.exercise.dank.service.contract;
 
 import com.exercise.dank.model.dto.EducationRecordDto;
 
+import java.util.List;
+
 public interface EducationRecordService {
     EducationRecordDto createEducationRecord(EducationRecordDto dto);
+
+    List<EducationRecordDto> getUserEducationRecordsByUserId(Long id);
+    EducationRecordDto getEducationRecordById(Long id);
+    EducationRecordDto updateEducationRecordById(Long id, EducationRecordDto dto);
+    String deleteEducationRecordById(Long id);
 }

@@ -1,7 +1,11 @@
 package com.exercise.dank.repo;
 
-import org.springframework.stereotype.Repository;
 
-@Repository
-public class EducationRecordRepository {
+import com.exercise.dank.model.domain.EducationRecord;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.List;
+
+public interface EducationRecordRepository extends MongoRepository<EducationRecord, Long> {
+    List<EducationRecord>findAllByUserId(Long id);
 }
