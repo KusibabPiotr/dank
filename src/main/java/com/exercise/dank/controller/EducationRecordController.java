@@ -20,22 +20,22 @@ public class EducationRecordController {
     }
 
     @GetMapping("/educations/{userId}")
-    public ResponseEntity<List<EducationRecordDto>> getUserEducationRecordsByUserId(@PathVariable Long userId){
+    public ResponseEntity<List<EducationRecordDto>> getUserEducationRecordsByUserId(@PathVariable String userId){
         return ResponseEntity.ok(educationRecordService.getUserEducationRecordsByUserId(userId));
     }
 
     @GetMapping("/education/{id}")
-    public ResponseEntity<EducationRecordDto> getEducationRecordById(@PathVariable Long id){
+    public ResponseEntity<EducationRecordDto> getEducationRecordById(@PathVariable String id){
         return ResponseEntity.ok(educationRecordService.getEducationRecordById(id));
     }
 
     @PutMapping("/education/{id}")
-    public ResponseEntity<EducationRecordDto> updateEducationRecordById(@PathVariable Long id, @RequestBody EducationRecordDto dto){
+    public ResponseEntity<EducationRecordDto> updateEducationRecordById(@PathVariable String id, @RequestBody EducationRecordDto dto){
         return ResponseEntity.ok(educationRecordService.updateEducationRecordById(id, dto));
     }
 
     @DeleteMapping("/education/{id}")
-    public ResponseEntity<String> deleteEducationRecordById(@PathVariable Long id){
+    public ResponseEntity<String> deleteEducationRecordById(@PathVariable String id){
         return ResponseEntity.ok(educationRecordService.deleteEducationRecordById(id));
     }
 }

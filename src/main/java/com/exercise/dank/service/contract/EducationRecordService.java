@@ -7,8 +7,8 @@ import java.util.List;
 public interface EducationRecordService {
     EducationRecordDto createEducationRecord(EducationRecordDto dto);
 
-    List<EducationRecordDto> getUserEducationRecordsByUserId(Long id);
-    EducationRecordDto getEducationRecordById(Long id);
-    EducationRecordDto updateEducationRecordById(Long id, EducationRecordDto dto);
-    String deleteEducationRecordById(Long id);
+    List<EducationRecordDto> getUserEducationRecordsByUserId(String id);
+    EducationRecordDto getEducationRecordById(String id);
+    EducationRecordDto updateEducationRecordById(String id, EducationRecordDto dto);
+    String deleteEducationRecordById(String id);
 }

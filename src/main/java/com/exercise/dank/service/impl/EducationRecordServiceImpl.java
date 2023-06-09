@@ -6,7 +6,10 @@ import com.exercise.dank.model.domain.EducationRecord;
 import com.exercise.dank.model.dto.EducationRecordDto;
 import com.exercise.dank.repo.EducationRecordRepository;
 import com.exercise.dank.service.contract.EducationRecordService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,33 +21,33 @@ public class EducationRecordServiceImpl implements EducationRecordService {
     private final EducationRecordMapper educationRecordMapper;
     @Override
     public EducationRecordDto createEducationRecord(EducationRecordDto dto) {
-        return educationRecordRepository.save(educationRecordMapper.mapEducationRecordToDto(dto));
+        return educationRecordMapper.mapEducationRecordToDto(educationRecordRepository.insert(educationRecordMapper.mapDtoToEducationRecord(dto)));
     }
 
     @Override
-    public List<EducationRecordDto> getUserEducationRecordsByUserId(Long id) {
+    public List<EducationRecordDto> getUserEducationRecordsByUserId(String id) {
         return educationRecordMapper.mapListOfEducationRecordToDtoList(educationRecordRepository.findAllByUserId(id));
     }
 
     @Override
-    public EducationRecordDto getEducationRecordById(Long id) {
+    public EducationRecordDto getEducationRecordById(String id) {
         return educationRecordMapper.mapEducationRecordToDto(educationRecordRepository.findById(id)
                 .orElseThrow(EducationRecordNotFound::new));
     }
 
     @Override
-    public EducationRecordDto updateEducationRecordById(Long id, EducationRecordDto dto) {
+    public EducationRecordDto updateEducationRecordById(String id, EducationRecordDto dto) {
         EducationRecord educationRecord = getEducationRecordByIdAndSetNewValues(id, dto);
         return educationRecordMapper.mapEducationRecordToDto(educationRecord);
     }
 
     @Override
-    public String deleteEducationRecordById(Long id) {
+    public String deleteEducationRecordById(String id) {
         educationRecordRepository.deleteById(id);
         return "Successfully deleted education record!";
     }
 
-    private EducationRecord getEducationRecordByIdAndSetNewValues(Long id, EducationRecordDto dto) {
+    private EducationRecord getEducationRecordByIdAndSetNewValues(String id, EducationRecordDto dto) {
         EducationRecord educationRecord = educationRecordRepository.findById(id).orElseThrow(EducationRecordNotFound::new);
         educationRecord.setUserId(dto.userId());
         educationRecord.setPublicId(dto.publicId());

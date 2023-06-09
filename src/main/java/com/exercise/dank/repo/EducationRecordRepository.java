@@ -6,6 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
-public interface EducationRecordRepository extends MongoRepository<EducationRecord, Long> {
-    List<EducationRecord>findAllByUserId(Long id);
+public interface EducationRecordRepository extends MongoRepository<EducationRecord, String> {
+    List<EducationRecord>findAllByUserId(String id);
 }

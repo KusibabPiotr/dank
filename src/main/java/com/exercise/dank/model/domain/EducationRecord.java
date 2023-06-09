@@ -1,16 +1,16 @@
 package com.exercise.dank.model.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@Document
 public class EducationRecord {
-    private Long id;
+    @Id
+    private String id;
     private String publicId;
     private String userId;
     private String institutionId;
