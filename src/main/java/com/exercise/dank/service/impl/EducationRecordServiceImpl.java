@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -37,7 +38,12 @@ public class EducationRecordServiceImpl implements EducationRecordService {
 
     @Override
     public EducationRecordDto updateEducationRecordById(String id, EducationRecordDto dto) {
-        EducationRecord educationRecord = getEducationRecordByIdAndSetNewValues(id, dto);
+        EducationRecord educationRecord = educationRecordRepository.findById(id).orElseThrow(EducationRecordNotFound::new);
+        educationRecord.setUserId(dto.userId());
+        educationRecord.setPublicId(dto.publicId());
+        educationRecord.setInstitutionId(dto.institutionId());
+        educationRecord.setDegree(dto.degree());
+        educationRecordRepository.save(educationRecord);
         return educationRecordMapper.mapEducationRecordToDto(educationRecord);
     }
 
@@ -45,14 +51,5 @@ public class EducationRecordServiceImpl implements EducationRecordService {
     public String deleteEducationRecordById(String id) {
         educationRecordRepository.deleteById(id);
         return "Successfully deleted education record!";
-    }
-
-    private EducationRecord getEducationRecordByIdAndSetNewValues(String id, EducationRecordDto dto) {
-        EducationRecord educationRecord = educationRecordRepository.findById(id).orElseThrow(EducationRecordNotFound::new);
-        educationRecord.setUserId(dto.userId());
-        educationRecord.setPublicId(dto.publicId());
-        educationRecord.setInstitutionId(dto.institutionId());
-        educationRecord.setDegree(dto.degree());
-        return educationRecord;
     }
 }

@@ -29,6 +29,7 @@ public class EducationRecordController {
         return ResponseEntity.ok(educationRecordService.getEducationRecordById(id));
     }
 
+    //NOT WORKING
     @PutMapping("/education/{id}")
     public ResponseEntity<EducationRecordDto> updateEducationRecordById(@PathVariable String id, @RequestBody EducationRecordDto dto){
         return ResponseEntity.ok(educationRecordService.updateEducationRecordById(id, dto));
