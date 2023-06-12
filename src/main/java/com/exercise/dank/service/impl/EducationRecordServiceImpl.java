@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -31,12 +32,12 @@ public class EducationRecordServiceImpl implements EducationRecordService {
 
     @Override
     public List<EducationRecordDto> getUserEducationRecordsByUserId(String id) {
-        return educationRecordMapper.mapListOfEducationRecordToDtoList(educationRecordRepository.findAllByUserId(id));
+        return educationRecordMapper.mapListOfEducationRecordToDtoList(educationRecordRepository.findAllByUserUserId(id));
     }
 
     @Override
     public EducationRecordDto getEducationRecordById(String id) {
-        return educationRecordMapper.mapEducationRecordToDto(educationRecordRepository.findById(id)
+        return educationRecordMapper.mapEducationRecordToDto(educationRecordRepository.findAllByInstitutionId(id)
                 .orElseThrow(EducationRecordNotFound::new));
     }
 
@@ -77,7 +78,7 @@ public class EducationRecordServiceImpl implements EducationRecordService {
         PageRequest pageRequest = createPageRequest(sortBy, sortDirection, page, pageSize);
 
         List<String> connectedUserIds = getConnectedUserIds();
-        return userMapper.mapListOfUsersToListOfUsersDto(educationRecordRepository.findAllByInstitutionIdAndUserIdIn(
+        return userMapper.mapListOfUsersToListOfUsersDto(educationRecordRepository.findAllByInstitutionIdAndUserUserIdIn(
                         institutionId, connectedUserIds, pageRequest)
                 .map(EducationRecord::getUser).toList());
     }
@@ -89,7 +90,9 @@ public class EducationRecordServiceImpl implements EducationRecordService {
 
     private List<String> getConnectedUserIds() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User principal = (User) authentication.getPrincipal();
-        return principal.getConnections().stream().map(User::getUserId).toList();
+        String principal = (String) authentication.getPrincipal();
+        return educationRecordRepository.findAllByUserUsername(principal).stream().map(e -> e.getUser().getConnections())
+                .flatMap(Collection::stream)
+                .map(User::getId).toList();
     }
 }

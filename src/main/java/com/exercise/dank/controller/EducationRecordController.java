@@ -26,7 +26,7 @@ public class EducationRecordController {
     }
 
     @GetMapping("/education/{id}")
-    public ResponseEntity<EducationRecordDto> getEducationRecordById(@PathVariable String id){
+    public ResponseEntity<EducationRecordDto> getEducationRecordByInstitutionId(@PathVariable String id){
         return ResponseEntity.ok(educationRecordService.getEducationRecordById(id));
     }
 
@@ -45,13 +45,13 @@ public class EducationRecordController {
     public ResponseEntity<List<UserDto>> getUsersByInstitutionAndConnections(
             @RequestParam String institutionId,
             @RequestParam Boolean connectionBasedSorting,
-            @RequestParam(required = false, defaultValue = "lastName") String sortBy,
-            @RequestParam(required = false, defaultValue = "asc") String sortDirection,
+            @RequestParam(required = false, defaultValue = "userDto.lastName") String sortBy,
+            @RequestParam(required = false, defaultValue = "ASC") String sortDirection,
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         if (connectionBasedSorting)
-            return ResponseEntity.ok(educationRecordService.getAllUsersForGivenInstitution(institutionId, sortBy, sortDirection, page, pageSize));
-        else
             return ResponseEntity.ok(educationRecordService.getUsersByInstitutionAndConnections(institutionId, sortBy, sortDirection, page, pageSize));
+        else
+            return ResponseEntity.ok(educationRecordService.getAllUsersForGivenInstitution(institutionId, sortBy, sortDirection, page, pageSize));
     }
 }
