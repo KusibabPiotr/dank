@@ -1,6 +1,7 @@
 package com.exercise.dank.controller;
 
 import com.exercise.dank.model.dto.EducationRecordDto;
+import com.exercise.dank.model.dto.UserDto;
 import com.exercise.dank.service.contract.EducationRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,28 @@ public class EducationRecordController {
         return ResponseEntity.ok(educationRecordService.getEducationRecordById(id));
     }
 
-    //NOT WORKING
     @PutMapping("/education/{id}")
-    public ResponseEntity<EducationRecordDto> updateEducationRecordById(@PathVariable String id, @RequestBody EducationRecordDto dto){
+    public ResponseEntity<EducationRecordDto> updateEducationRecordById(@PathVariable String id,
+                                                                        @RequestBody EducationRecordDto dto){
         return ResponseEntity.ok(educationRecordService.updateEducationRecordById(id, dto));
     }
 
     @DeleteMapping("/education/{id}")
     public ResponseEntity<String> deleteEducationRecordById(@PathVariable String id){
         return ResponseEntity.ok(educationRecordService.deleteEducationRecordById(id));
+    }
+
+    @GetMapping("/education/users")
+    public ResponseEntity<List<UserDto>> getUsersByInstitutionAndConnections(
+            @RequestParam String institutionId,
+            @RequestParam Boolean connectionBasedSorting,
+            @RequestParam(required = false, defaultValue = "lastName") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortDirection,
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        if (connectionBasedSorting)
+            return ResponseEntity.ok(educationRecordService.getAllUsersForGivenInstitution(institutionId, sortBy, sortDirection, page, pageSize));
+        else
+            return ResponseEntity.ok(educationRecordService.getUsersByInstitutionAndConnections(institutionId, sortBy, sortDirection, page, pageSize));
     }
 }

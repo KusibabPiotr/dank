@@ -12,7 +12,7 @@ public class EducationRecord {
     @Id
     private String id;
     private String publicId;
-    private String userId;
     private String institutionId;
     private String degree;
+    private User user;
 }
