@@ -44,6 +44,7 @@ public class EducationRecordController {
 
     @GetMapping("/education/users")
     public ResponseEntity<Page<UserDto>> getUsersByInstitutionAndConnections(
+            @RequestParam String userId,
             @RequestParam String institutionId,
             @RequestParam Boolean connectionBasedSorting,
             @RequestParam(required = false, defaultValue = "lastName") String sortBy,
@@ -51,7 +52,7 @@ public class EducationRecordController {
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         if (connectionBasedSorting)
-            return ResponseEntity.ok(educationRecordService.getUsersByInstitutionAndConnections(institutionId, sortBy, sortDirection, page, pageSize));
+            return ResponseEntity.ok(educationRecordService.getUsersByInstitutionAndConnections(userId, institutionId, sortBy, sortDirection, page, pageSize));
         else
             return ResponseEntity.ok(educationRecordService.getAllUsersForGivenInstitution(institutionId, sortBy, sortDirection, page, pageSize));
     }

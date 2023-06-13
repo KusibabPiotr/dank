@@ -16,5 +16,5 @@ public interface EducationRecordService {
 
     Page<UserDto> getAllUsersForGivenInstitution(String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize);
 
-    Page<UserDto> getUsersByInstitutionAndConnections(String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize);
+    Page<UserDto> getUsersByInstitutionAndConnections(String userId, String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize);
 }

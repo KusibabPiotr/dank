@@ -1,5 +1,6 @@
 package com.exercise.dank.service.impl;
 
+import com.exercise.dank.comparator.UserDtoSimpleComparator;
 import com.exercise.dank.exception.EducationRecordNotFound;
 import com.exercise.dank.mapper.EducationRecordMapper;
 import com.exercise.dank.mapper.UserMapper;
@@ -10,16 +11,11 @@ import com.exercise.dank.model.dto.UserDto;
 import com.exercise.dank.repo.EducationRecordRepository;
 import com.exercise.dank.service.contract.EducationRecordService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -63,35 +59,67 @@ public class EducationRecordServiceImpl implements EducationRecordService {
     }
 
     @Override
-    public Page<UserDto> getAllUsersForGivenInstitution(String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize) {
-        PageRequest pageRequest = createPageRequest(sortBy, sortDirection, page, pageSize);
-        Page<EducationRecord> educationRecordPage = educationRecordRepository.findAllByInstitutionId(institutionId, pageRequest);
-
-        List<UserDto> list = educationRecordPage.getContent().stream()
-                .filter(record -> record.getInstitutionId().equals(institutionId))
-                .map(record -> userMapper.mapUserToUserDto(record.getUser()))
-                .sorted(getComparator(sortBy, sortDirection))
-                .distinct().toList();
-        return new PageImpl<>(list, pageRequest, educationRecordPage.getTotalElements());
+    public Page<UserDto> getAllUsersForGivenInstitution(String institutionId, String sortBy, String sortDirection,
+                                                        Integer page, Integer pageSize) {
+        Page<EducationRecord> educationRecordPage = getAllEducationRecordsForInstitution(institutionId, sortBy, sortDirection, page, pageSize);
+        List<UserDto> list = getAllUsersForGivenInstitution(educationRecordPage, sortBy, sortDirection);
+        return new PageImpl<>(list, createPageRequest(sortBy, sortDirection, page, pageSize), educationRecordPage.getTotalElements());
     }
 
     @Override
-    public Page<UserDto> getUsersByInstitutionAndConnections(
-            String institutionId,
-            String sortBy,
-            String sortDirection,
-            Integer page,
-            Integer pageSize) {
+    public Page<UserDto> getUsersByInstitutionAndConnections(String userId, String institutionId, String sortBy, String sortDirection,
+            Integer page, Integer pageSize) {
+        Page<EducationRecord> educationRecordPage = getAllEducationRecordsForInstitution(institutionId, sortBy, sortDirection, page, pageSize);
+        List<UserDto> list = getAllUsersForGivenInstitution(educationRecordPage, sortBy, sortDirection);
+        List<String> connectedUserIds = getConnectedUserIds(userId);
+        PageImpl<UserDto> userDtoPageable =  new PageImpl<>(list, createPageRequest(sortBy, sortDirection, page, pageSize), educationRecordPage.getTotalElements());
+        List<UserDto> allConnectedUsersFromWholeList = getAllConnectedUsersFromWholeList(userDtoPageable, connectedUserIds);
+        return moveConnectedUsersUpInSortedPosition(userDtoPageable, allConnectedUsersFromWholeList);
+    }
 
+    private Page<UserDto> moveConnectedUsersUpInSortedPosition(PageImpl<UserDto> userDtoPageable, List<UserDto> allConnectedUsersFromWholeList) {
+        List<UserDto> userList = new ArrayList<>(userDtoPageable.getContent());
+
+        List<UserDto> connectedUsers = userList.stream()
+                .filter(allConnectedUsersFromWholeList::contains)
+                .toList();
+
+        userList.removeAll(connectedUsers);
+        userList.addAll(0, connectedUsers);
+
+        int totalElements = userList.size();
+        Pageable pageable = userDtoPageable.getPageable();
+        int startIndex = (int)pageable.getOffset();
+        int endIndex = Math.min(startIndex + pageable.getPageSize(), totalElements);
+        List<UserDto> usersForPage = userList.subList(startIndex, endIndex);
+
+        return new PageImpl<>(usersForPage, pageable, totalElements);
+    }
+
+    private List<UserDto> getAllConnectedUsersFromWholeList(PageImpl<UserDto> userDtoPageable, List<String> connectedUserIds){
+        return userDtoPageable.getContent().stream().filter(e -> {
+            for (UserDto userDto : e.connections()) {
+                for (String connectedUserId : connectedUserIds) {
+                    if (connectedUserId.equals(userDto.userId())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }).toList();
+    }
+
+    private List<UserDto> getAllUsersForGivenInstitution(Page<EducationRecord> educationRecordPage, String sortBy, String sortDirection){
+        return educationRecordPage.getContent().stream()
+                .map(record -> userMapper.mapUserToUserDto(record.getUser()))
+                .sorted(new UserDtoSimpleComparator(sortBy, sortDirection))
+                .distinct().toList();
+    }
+
+    private Page<EducationRecord> getAllEducationRecordsForInstitution(String institutionId, String sortBy, String sortDirection,
+                                                                       Integer page, Integer pageSize){
         PageRequest pageRequest = createPageRequest(sortBy, sortDirection, page, pageSize);
-
-        List<String> connectedUserIds = getConnectedUserIds();
-        userMapper.mapPageOfUsersToPageOfUsersDto(educationRecordRepository.findAllByInstitutionIdAndUserUserIdIn(
-                        institutionId, connectedUserIds, pageRequest)
-                .map(e -> e.getUser().getConnections())
-        );
-        //get all users connections lists, combine them together???
-        //return from repo not page but list
+        return educationRecordRepository.findAllByInstitutionId(institutionId, pageRequest);
     }
 
     private PageRequest createPageRequest(String sortBy, String sortDirection, Integer page, Integer pageSize) {
@@ -99,27 +127,10 @@ public class EducationRecordServiceImpl implements EducationRecordService {
         return PageRequest.of(page, pageSize, sort);
     }
 
-    private List<String> getConnectedUserIds() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String principal = (String) authentication.getPrincipal();
-        return educationRecordRepository.findAllByUserUsername(principal).stream().map(e -> e.getUser().getConnections())
+    private List<String> getConnectedUserIds(String userId) {
+        return educationRecordRepository.findAllByUserUserId(userId).stream()
+                .map(e -> e.getUser().getConnections())
                 .flatMap(Collection::stream)
                 .map(User::getId).toList();
-    }
-
-    private Comparator<UserDto> getComparator(String sortBy, String sortDirection) {
-        Comparator<UserDto> comparator;
-
-        if (sortBy.equals("firstName")) {
-            comparator = Comparator.comparing(UserDto::firstName);
-        } else {
-            comparator = Comparator.comparing(UserDto::lastName);
-        }
-
-        if (sortDirection.equalsIgnoreCase("desc")) {
-            comparator = comparator.reversed();
-        }
-
-        return comparator;
     }
 }
