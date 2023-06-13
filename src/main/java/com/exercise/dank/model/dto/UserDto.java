@@ -1,7 +1,6 @@
 package com.exercise.dank.model.dto;
 
 import lombok.Builder;
-
 import java.util.List;
 
 @Builder

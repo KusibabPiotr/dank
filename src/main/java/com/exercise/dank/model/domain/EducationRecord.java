@@ -3,6 +3,7 @@ package com.exercise.dank.model.domain;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -14,5 +15,6 @@ public class EducationRecord {
     private String publicId;
     private String institutionId;
     private String degree;
+    @DBRef
     private User user;
 }
