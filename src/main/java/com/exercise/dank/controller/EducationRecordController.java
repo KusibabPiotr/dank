@@ -4,6 +4,7 @@ import com.exercise.dank.model.dto.EducationRecordDto;
 import com.exercise.dank.model.dto.UserDto;
 import com.exercise.dank.service.contract.EducationRecordService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,10 +43,10 @@ public class EducationRecordController {
     }
 
     @GetMapping("/education/users")
-    public ResponseEntity<List<UserDto>> getUsersByInstitutionAndConnections(
+    public ResponseEntity<Page<UserDto>> getUsersByInstitutionAndConnections(
             @RequestParam String institutionId,
             @RequestParam Boolean connectionBasedSorting,
-            @RequestParam(required = false, defaultValue = "userDto.lastName") String sortBy,
+            @RequestParam(required = false, defaultValue = "lastName") String sortBy,
             @RequestParam(required = false, defaultValue = "ASC") String sortDirection,
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {

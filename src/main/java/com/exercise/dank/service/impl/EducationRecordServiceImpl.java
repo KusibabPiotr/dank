@@ -10,6 +10,8 @@ import com.exercise.dank.model.dto.UserDto;
 import com.exercise.dank.repo.EducationRecordRepository;
 import com.exercise.dank.service.contract.EducationRecordService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -25,6 +28,7 @@ public class EducationRecordServiceImpl implements EducationRecordService {
     private final EducationRecordRepository educationRecordRepository;
     private final EducationRecordMapper educationRecordMapper;
     private final UserMapper userMapper;
+
     @Override
     public EducationRecordDto createEducationRecord(EducationRecordDto dto) {
         return educationRecordMapper.mapEducationRecordToDto(educationRecordRepository.insert(educationRecordMapper.mapDtoToEducationRecord(dto)));
@@ -59,16 +63,20 @@ public class EducationRecordServiceImpl implements EducationRecordService {
     }
 
     @Override
-    public List<UserDto> getAllUsersForGivenInstitution(String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize) {
+    public Page<UserDto> getAllUsersForGivenInstitution(String institutionId, String sortBy, String sortDirection, Integer page, Integer pageSize) {
         PageRequest pageRequest = createPageRequest(sortBy, sortDirection, page, pageSize);
-        return educationRecordRepository.findAllByInstitutionId(institutionId, pageRequest).stream()
+        Page<EducationRecord> educationRecordPage = educationRecordRepository.findAllByInstitutionId(institutionId, pageRequest);
+
+        List<UserDto> list = educationRecordPage.getContent().stream()
                 .filter(record -> record.getInstitutionId().equals(institutionId))
                 .map(record -> userMapper.mapUserToUserDto(record.getUser()))
+                .sorted(getComparator(sortBy, sortDirection))
                 .distinct().toList();
+        return new PageImpl<>(list, pageRequest, educationRecordPage.getTotalElements());
     }
 
     @Override
-    public List<UserDto> getUsersByInstitutionAndConnections(
+    public Page<UserDto> getUsersByInstitutionAndConnections(
             String institutionId,
             String sortBy,
             String sortDirection,
@@ -78,9 +86,12 @@ public class EducationRecordServiceImpl implements EducationRecordService {
         PageRequest pageRequest = createPageRequest(sortBy, sortDirection, page, pageSize);
 
         List<String> connectedUserIds = getConnectedUserIds();
-        return userMapper.mapListOfUsersToListOfUsersDto(educationRecordRepository.findAllByInstitutionIdAndUserUserIdIn(
+        userMapper.mapPageOfUsersToPageOfUsersDto(educationRecordRepository.findAllByInstitutionIdAndUserUserIdIn(
                         institutionId, connectedUserIds, pageRequest)
-                .map(EducationRecord::getUser).toList());
+                .map(e -> e.getUser().getConnections())
+        );
+        //get all users connections lists, combine them together???
+        //return from repo not page but list
     }
 
     private PageRequest createPageRequest(String sortBy, String sortDirection, Integer page, Integer pageSize) {
@@ -94,5 +105,21 @@ public class EducationRecordServiceImpl implements EducationRecordService {
         return educationRecordRepository.findAllByUserUsername(principal).stream().map(e -> e.getUser().getConnections())
                 .flatMap(Collection::stream)
                 .map(User::getId).toList();
+    }
+
+    private Comparator<UserDto> getComparator(String sortBy, String sortDirection) {
+        Comparator<UserDto> comparator;
+
+        if (sortBy.equals("firstName")) {
+            comparator = Comparator.comparing(UserDto::firstName);
+        } else {
+            comparator = Comparator.comparing(UserDto::lastName);
+        }
+
+        if (sortDirection.equalsIgnoreCase("desc")) {
+            comparator = comparator.reversed();
+        }
+
+        return comparator;
     }
 }

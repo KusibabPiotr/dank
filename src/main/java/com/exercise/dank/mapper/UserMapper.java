@@ -2,6 +2,8 @@ package com.exercise.dank.mapper;
 
 import com.exercise.dank.model.domain.User;
 import com.exercise.dank.model.dto.UserDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,6 +27,11 @@ public class UserMapper {
                 .username(user.getUsername())
                 .connections(mapListOfUsersToListOfUsersDto(user.getConnections()))
                 .build();
+    }
+
+    public Page<UserDto> mapPageOfUsersToPageOfUsersDto(Page<User> page) {
+        List<UserDto> list = page.stream().map(this::mapUserToUserDto).toList();
+        return new PageImpl<>(list, page.getPageable(), page.getTotalElements());
     }
 
     public List<UserDto> mapListOfUsersToListOfUsersDto(List<User> list) {
